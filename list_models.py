@@ -4,8 +4,12 @@ import os
 from datetime import datetime
 import re
 
-# API ключ: из переменной окружения или захардкоженный (для локального использования)
-API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyDMsLE_2nHG2hl6VtDLvIakJgR1yyMRQ3I')
+# API ключ: из переменной окружения (для безопасности)
+API_KEY = os.environ.get('GEMINI_API_KEY')
+if not API_KEY:
+    print("❌ Ошибка: укажи GEMINI_API_KEY в переменных окружения")
+    print("   Пример: set GEMINI_API_KEY=твой_ключ_тут")
+    exit(1)
 genai.configure(api_key=API_KEY)
 
 print("🔄 Загрузка списка моделей...")
