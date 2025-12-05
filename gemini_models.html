@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Models</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d9ff 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            color: #64748b;
+            font-size: 0.95em;
+        }
+        
+        .stats span {
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        
+        /* Search & Filters */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            min-width: 250px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 20px rgba(0,217,255,0.2);
+        }
+        
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1em;
+        }
+        
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            border-color: transparent;
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        /* Categories */
+        .category {
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .category-header:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .category-count {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #94a3b8;
+        }
+        
+        .category-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        
+        .category.collapsed .category-toggle {
+            transform: rotate(-90deg);
+        }
+        
+        .category.collapsed .category-content {
+            display: none;
+        }
+        
+        /* Table */
+        .category-content {
+            padding: 0 10px 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            font-weight: 500;
+            color: #64748b;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        td {
+            padding: 14px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .model-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95em;
+            color: #00d9ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .copy-btn {
+            opacity: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 4px;
+            transition: all 0.2s;
+        }
+        
+        tr:hover .copy-btn {
+            opacity: 0.6;
+        }
+        
+        .copy-btn:hover {
+            opacity: 1 !important;
+            transform: scale(1.1);
+        }
+        
+        /* Status badges */
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-stable { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .status-preview { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .status-exp { background: rgba(168,85,247,0.2); color: #a855f7; }
+        .status-latest { background: rgba(0,217,255,0.2); color: #00d9ff; }
+        
+        .date {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        
+        .desc {
+            color: #94a3b8;
+            font-size: 0.9em;
+            max-width: 350px;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 10px 40px rgba(34,197,94,0.3);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            table { font-size: 0.9em; }
+            .desc { display: none; }
+            td, th { padding: 10px 8px; }
+        }
+        
+        /* Hidden class for filtering */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Gemini Models</h1>
+            <p class="stats">
+                Обновлено: <span>05.12.2025 16:25</span> | 
+                Всего: <span>56</span> моделей
+            </p>
+        </header>
+        
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Поиск модели..." autocomplete="off">
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="pro">Pro</button>
+                <button class="filter-btn" data-filter="flash">Flash</button>
+                <button class="filter-btn" data-filter="imagen">Image</button>
+                <button class="filter-btn" data-filter="veo">Veo</button>
+                <button class="filter-btn" data-filter="embedding">Embed</button>
+                <button class="filter-btn" data-filter="gemma">Gemma</button>
+            </div>
+        </div>
+
+        <div class="category" data-category="pro">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #a855f7">
+                    🟣 Gemini Pro
+                    <span class="category-count">6</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="gemini-3-pro-preview">
+                        <td class="model-name">
+                            gemini-3-pro-preview
+                            <button class="copy-btn" onclick="copyName('gemini-3-pro-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">18.11.2025</td>
+                        <td class="desc">Gemini 3 Pro Preview</td>
+                    </tr>
+                    <tr data-name="gemini-pro-latest">
+                        <td class="model-name">
+                            gemini-pro-latest
+                            <button class="copy-btn" onclick="copyName('gemini-pro-latest', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-latest">LATEST</span></td>
+                        <td class="date">06.12.2023</td>
+                        <td class="desc">Latest release of Gemini Pro</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-pro-preview-tts">
+                        <td class="model-name">
+                            gemini-2.5-pro-preview-tts
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-pro-preview-tts', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Gemini 2.5 Pro Preview TTS</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-pro-exp-02-05">
+                        <td class="model-name">
+                            gemini-2.0-pro-exp-02-05
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-pro-exp-02-05', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">25.03.2025</td>
+                        <td class="desc">Experimental release (March 25th, 2025) of Gemini 2.5 Pro</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-pro-exp">
+                        <td class="model-name">
+                            gemini-2.0-pro-exp
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-pro-exp', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">05.02.2025</td>
+                        <td class="desc">Experimental release (March 25th, 2025) of Gemini 2.5 Pro</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-pro">
+                        <td class="model-name">
+                            gemini-2.5-pro
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-pro', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">17.06.2025</td>
+                        <td class="desc">Stable release (June 17th, 2025) of Gemini 2.5 Pro</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="flash">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #22c55e">
+                    ⚡ Gemini Flash
+                    <span class="category-count">19</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-native-audio-preview-09-2025">
+                        <td class="model-name">
+                            gemini-2.5-flash-native-audio-preview-09-2025
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-native-audio-preview-09-2025', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">09/2025</td>
+                        <td class="desc">Gemini 2.5 Flash Native Audio Preview 09-2025</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-native-audio-latest">
+                        <td class="model-name">
+                            gemini-2.5-flash-native-audio-latest
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-native-audio-latest', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-latest">LATEST</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Latest release of Gemini 2.5 Flash Native Audio</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-live-preview">
+                        <td class="model-name">
+                            gemini-2.5-flash-live-preview
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-live-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Gemini 2.5 Flash Live Preview</td>
+                    </tr>
+                    <tr data-name="gemini-live-2.5-flash-preview">
+                        <td class="model-name">
+                            gemini-live-2.5-flash-preview
+                            <button class="copy-btn" onclick="copyName('gemini-live-2.5-flash-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Gemini Live 2.5 Flash Preview</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-live-001">
+                        <td class="model-name">
+                            gemini-2.0-flash-live-001
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-live-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">11.12.2024</td>
+                        <td class="desc">Gemini 2.0 Flash 001</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-lite-preview-09-2025">
+                        <td class="model-name">
+                            gemini-2.5-flash-lite-preview-09-2025
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-lite-preview-09-2025', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">25.09.2025</td>
+                        <td class="desc">Preview release (Septempber 25th, 2025) of Gemini 2.5 Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-preview-09-2025">
+                        <td class="model-name">
+                            gemini-2.5-flash-preview-09-2025
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-preview-09-2025', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">09/2025</td>
+                        <td class="desc">Gemini 2.5 Flash Preview Sep 2025</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-lite">
+                        <td class="model-name">
+                            gemini-2.5-flash-lite
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-lite', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">17.06.2025</td>
+                        <td class="desc">Stable version of Gemini 2.5 Flash-Lite, released in July of 2025</td>
+                    </tr>
+                    <tr data-name="gemini-flash-lite-latest">
+                        <td class="model-name">
+                            gemini-flash-lite-latest
+                            <button class="copy-btn" onclick="copyName('gemini-flash-lite-latest', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-latest">LATEST</span></td>
+                        <td class="date">05.02.2025</td>
+                        <td class="desc">Latest release of Gemini Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-flash-latest">
+                        <td class="model-name">
+                            gemini-flash-latest
+                            <button class="copy-btn" onclick="copyName('gemini-flash-latest', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-latest">LATEST</span></td>
+                        <td class="date">30.01.2025</td>
+                        <td class="desc">Latest release of Gemini Flash</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-preview-tts">
+                        <td class="model-name">
+                            gemini-2.5-flash-preview-tts
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-preview-tts', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Gemini 2.5 Flash Preview TTS</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-lite-preview">
+                        <td class="model-name">
+                            gemini-2.0-flash-lite-preview
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-lite-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">5.02.2025</td>
+                        <td class="desc">Preview release (February 5th, 2025) of Gemini 2.0 Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-lite-preview-02-05">
+                        <td class="model-name">
+                            gemini-2.0-flash-lite-preview-02-05
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-lite-preview-02-05', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">5.02.2025</td>
+                        <td class="desc">Preview release (February 5th, 2025) of Gemini 2.0 Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-lite">
+                        <td class="model-name">
+                            gemini-2.0-flash-lite
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-lite', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">05.02.2025</td>
+                        <td class="desc">Gemini 2.0 Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-lite-001">
+                        <td class="model-name">
+                            gemini-2.0-flash-lite-001
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-lite-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">05.02.2025</td>
+                        <td class="desc">Stable version of Gemini 2.0 Flash-Lite</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-001">
+                        <td class="model-name">
+                            gemini-2.0-flash-001
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">30.01.2025</td>
+                        <td class="desc">Stable version of Gemini 2.0 Flash, our fast and versatile multimodal model for </td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash">
+                        <td class="model-name">
+                            gemini-2.0-flash
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">30.01.2025</td>
+                        <td class="desc">Gemini 2.0 Flash</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-exp">
+                        <td class="model-name">
+                            gemini-2.0-flash-exp
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-exp', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">11.12.2024</td>
+                        <td class="desc">Gemini 2.0 Flash Experimental</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash">
+                        <td class="model-name">
+                            gemini-2.5-flash
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">17.06.2025</td>
+                        <td class="desc">Stable version of Gemini 2.5 Flash, our mid-size multimodal model that supports </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="imagen">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #f59e0b">
+                    🎨 Imagen
+                    <span class="category-count">9</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="imagen-4.0-fast-generate-001">
+                        <td class="model-name">
+                            imagen-4.0-fast-generate-001
+                            <button class="copy-btn" onclick="copyName('imagen-4.0-fast-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">20.05.2025</td>
+                        <td class="desc">Vertex served Imagen 4.0 Fast model</td>
+                    </tr>
+                    <tr data-name="imagen-4.0-ultra-generate-001">
+                        <td class="model-name">
+                            imagen-4.0-ultra-generate-001
+                            <button class="copy-btn" onclick="copyName('imagen-4.0-ultra-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">20.05.2025</td>
+                        <td class="desc">Vertex served Imagen 4.0 ultra model</td>
+                    </tr>
+                    <tr data-name="imagen-4.0-generate-001">
+                        <td class="model-name">
+                            imagen-4.0-generate-001
+                            <button class="copy-btn" onclick="copyName('imagen-4.0-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">20.05.2025</td>
+                        <td class="desc">Vertex served Imagen 4.0 model</td>
+                    </tr>
+                    <tr data-name="imagen-4.0-ultra-generate-preview-06-06">
+                        <td class="model-name">
+                            imagen-4.0-ultra-generate-preview-06-06
+                            <button class="copy-btn" onclick="copyName('imagen-4.0-ultra-generate-preview-06-06', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">06.06</td>
+                        <td class="desc">Vertex served Imagen 4.0 ultra model</td>
+                    </tr>
+                    <tr data-name="imagen-4.0-generate-preview-06-06">
+                        <td class="model-name">
+                            imagen-4.0-generate-preview-06-06
+                            <button class="copy-btn" onclick="copyName('imagen-4.0-generate-preview-06-06', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">06.06</td>
+                        <td class="desc">Vertex served Imagen 4.0 model</td>
+                    </tr>
+                    <tr data-name="gemini-3-pro-image-preview">
+                        <td class="model-name">
+                            gemini-3-pro-image-preview
+                            <button class="copy-btn" onclick="copyName('gemini-3-pro-image-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">20.11.2025</td>
+                        <td class="desc">Gemini 3 Pro Image Preview</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-image">
+                        <td class="model-name">
+                            gemini-2.5-flash-image
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-image', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">07.05.2025</td>
+                        <td class="desc">Gemini 2.5 Flash Preview Image</td>
+                    </tr>
+                    <tr data-name="gemini-2.5-flash-image-preview">
+                        <td class="model-name">
+                            gemini-2.5-flash-image-preview
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-flash-image-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">07.05.2025</td>
+                        <td class="desc">Gemini 2.5 Flash Preview Image</td>
+                    </tr>
+                    <tr data-name="gemini-2.0-flash-exp-image-generation">
+                        <td class="model-name">
+                            gemini-2.0-flash-exp-image-generation
+                            <button class="copy-btn" onclick="copyName('gemini-2.0-flash-exp-image-generation', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">12.03.2025</td>
+                        <td class="desc">Gemini 2.0 Flash (Image Generation) Experimental</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="veo">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #ef4444">
+                    🎬 Veo (Video)
+                    <span class="category-count">5</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="veo-3.1-fast-generate-preview">
+                        <td class="model-name">
+                            veo-3.1-fast-generate-preview
+                            <button class="copy-btn" onclick="copyName('veo-3.1-fast-generate-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Veo 3.1 fast</td>
+                    </tr>
+                    <tr data-name="veo-3.1-generate-preview">
+                        <td class="model-name">
+                            veo-3.1-generate-preview
+                            <button class="copy-btn" onclick="copyName('veo-3.1-generate-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Veo 3.1</td>
+                    </tr>
+                    <tr data-name="veo-3.0-fast-generate-001">
+                        <td class="model-name">
+                            veo-3.0-fast-generate-001
+                            <button class="copy-btn" onclick="copyName('veo-3.0-fast-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">20.05.2025</td>
+                        <td class="desc">Veo 3 fast</td>
+                    </tr>
+                    <tr data-name="veo-3.0-generate-001">
+                        <td class="model-name">
+                            veo-3.0-generate-001
+                            <button class="copy-btn" onclick="copyName('veo-3.0-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">20.05.2025</td>
+                        <td class="desc">Veo 3</td>
+                    </tr>
+                    <tr data-name="veo-2.0-generate-001">
+                        <td class="model-name">
+                            veo-2.0-generate-001
+                            <button class="copy-btn" onclick="copyName('veo-2.0-generate-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">16.12.2024</td>
+                        <td class="desc">Vertex served Veo 2 model. Access to this model requires billing to be enabled o</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="embedding">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #6366f1">
+                    📊 Embedding
+                    <span class="category-count">7</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="aqa">
+                        <td class="model-name">
+                            aqa
+                            <button class="copy-btn" onclick="copyName('aqa', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Model trained to return answers to questions that are grounded in provided sourc</td>
+                    </tr>
+                    <tr data-name="gemini-embedding-001">
+                        <td class="model-name">
+                            gemini-embedding-001
+                            <button class="copy-btn" onclick="copyName('gemini-embedding-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">17.06.2025</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                    <tr data-name="gemini-embedding-exp">
+                        <td class="model-name">
+                            gemini-embedding-exp
+                            <button class="copy-btn" onclick="copyName('gemini-embedding-exp', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                    <tr data-name="gemini-embedding-exp-03-07">
+                        <td class="model-name">
+                            gemini-embedding-exp-03-07
+                            <button class="copy-btn" onclick="copyName('gemini-embedding-exp-03-07', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">03.07</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                    <tr data-name="text-embedding-004">
+                        <td class="model-name">
+                            text-embedding-004
+                            <button class="copy-btn" onclick="copyName('text-embedding-004', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">09.04.2024</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                    <tr data-name="embedding-001">
+                        <td class="model-name">
+                            embedding-001
+                            <button class="copy-btn" onclick="copyName('embedding-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">06.12.2023</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                    <tr data-name="embedding-gecko-001">
+                        <td class="model-name">
+                            embedding-gecko-001
+                            <button class="copy-btn" onclick="copyName('embedding-gecko-001', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-stable">STABLE</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Obtain a distributed representation of a text.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="gemma">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #ec4899">
+                    🤖 Gemma
+                    <span class="category-count">6</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="gemma-3n-e2b-it">
+                        <td class="model-name">
+                            gemma-3n-e2b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3n-e2b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">—</td>
+                        <td class="desc"></td>
+                    </tr>
+                    <tr data-name="gemma-3n-e4b-it">
+                        <td class="model-name">
+                            gemma-3n-e4b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3n-e4b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">—</td>
+                        <td class="desc"></td>
+                    </tr>
+                    <tr data-name="gemma-3-27b-it">
+                        <td class="model-name">
+                            gemma-3-27b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3-27b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">12.03.2025</td>
+                        <td class="desc"></td>
+                    </tr>
+                    <tr data-name="gemma-3-12b-it">
+                        <td class="model-name">
+                            gemma-3-12b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3-12b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">12.03.2025</td>
+                        <td class="desc"></td>
+                    </tr>
+                    <tr data-name="gemma-3-4b-it">
+                        <td class="model-name">
+                            gemma-3-4b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3-4b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">12.03.2025</td>
+                        <td class="desc"></td>
+                    </tr>
+                    <tr data-name="gemma-3-1b-it">
+                        <td class="model-name">
+                            gemma-3-1b-it
+                            <button class="copy-btn" onclick="copyName('gemma-3-1b-it', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status "></span></td>
+                        <td class="date">12.03.2025</td>
+                        <td class="desc"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="category" data-category="other">
+            <div class="category-header" onclick="toggleCategory(this)">
+                <div class="category-title" style="color: #64748b">
+                    📦 Другие
+                    <span class="category-count">4</span>
+                </div>
+                <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-content">
+                <table>
+                    <tr>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                    </tr>
+                    <tr data-name="gemini-2.5-computer-use-preview-10-2025">
+                        <td class="model-name">
+                            gemini-2.5-computer-use-preview-10-2025
+                            <button class="copy-btn" onclick="copyName('gemini-2.5-computer-use-preview-10-2025', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">10/2025</td>
+                        <td class="desc">Gemini 2.5 Computer Use Preview 10-2025</td>
+                    </tr>
+                    <tr data-name="gemini-robotics-er-1.5-preview">
+                        <td class="model-name">
+                            gemini-robotics-er-1.5-preview
+                            <button class="copy-btn" onclick="copyName('gemini-robotics-er-1.5-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">—</td>
+                        <td class="desc">Gemini Robotics-ER 1.5 Preview</td>
+                    </tr>
+                    <tr data-name="nano-banana-pro-preview">
+                        <td class="model-name">
+                            nano-banana-pro-preview
+                            <button class="copy-btn" onclick="copyName('nano-banana-pro-preview', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-preview">PREVIEW</span></td>
+                        <td class="date">20.11.2025</td>
+                        <td class="desc">Gemini 3 Pro Image Preview</td>
+                    </tr>
+                    <tr data-name="gemini-exp-1206">
+                        <td class="model-name">
+                            gemini-exp-1206
+                            <button class="copy-btn" onclick="copyName('gemini-exp-1206', event)" title="Копировать">📋</button>
+                        </td>
+                        <td><span class="status status-exp">EXP</span></td>
+                        <td class="date">06.12.2024</td>
+                        <td class="desc">Experimental release (March 25th, 2025) of Gemini 2.5 Pro</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="toast" id="toast">✓ Скопировано!</div>
+    </div>
+    
+    <script>
+        // Toggle category collapse
+        function toggleCategory(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
+        
+        // Copy model name
+        function copyName(name, event) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(name).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+        
+        // Search functionality
+        document.getElementById('search').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('tr[data-name]').forEach(row => {
+                const name = row.dataset.name;
+                row.classList.toggle('hidden', !name.includes(query));
+            });
+            
+            // Hide empty categories
+            document.querySelectorAll('.category').forEach(cat => {
+                const visibleRows = cat.querySelectorAll('tr[data-name]:not(.hidden)').length;
+                cat.classList.toggle('hidden', visibleRows === 0);
+            });
+        });
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.category').forEach(cat => {
+                    if (filter === 'all') {
+                        cat.classList.remove('hidden');
+                    } else {
+                        cat.classList.toggle('hidden', cat.dataset.category !== filter);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
