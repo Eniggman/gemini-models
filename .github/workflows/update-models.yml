@@ -1,0 +1,47 @@
+# Автоматическое обновление списка Gemini моделей
+# Запускается каждый день в 6:00 UTC (8:00 по Киеву)
+# Источник: GitHub Actions scheduled workflows
+
+name: Update Gemini Models
+
+on:
+  schedule:
+    # Каждый день в 6:00 UTC
+    - cron: '0 6 * * *'
+  
+  # Возможность запустить вручную
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-models:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install google-generativeai
+      
+      - name: Generate models list
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CI: true  # Отключает автооткрытие браузера
+        run: python list_models.py
+      
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gemini_models.html
+          # Коммитим только если есть изменения
+          git diff --staged --quiet || git commit -m "🔄 Update models list $(date +'%Y-%m-%d %H:%M') UTC"
+          git push
